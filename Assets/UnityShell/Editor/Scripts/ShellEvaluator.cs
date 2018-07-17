@@ -33,7 +33,22 @@ namespace UnityShell
 				}
 				catch { }
 			});
-			evaluator.Run("using UnityEngine; using UnityEditor; using System; using System.Collections.Generic;");
+
+			if (!String.IsNullOrEmpty(UnityShellSettings.UsingString))
+			{
+				evaluator.Run(UnityShellSettings.UsingStringDefault);
+			}
+			else
+			{
+				try
+				{
+					evaluator.Run(UnityShellSettings.UsingString);
+				}
+				catch
+				{
+					evaluator.Run(UnityShellSettings.UsingStringDefault);
+				}
+			}
 #else
 			AppDomain.CurrentDomain.GetAssemblies().ToList().ForEach(asm => {
 				try
@@ -42,7 +57,22 @@ namespace UnityShell
 				}
 				catch { }
 			});
-			Evaluator.Run("using UnityEngine; using UnityEditor; using System; using System.Collections.Generic;");
+
+			if (!String.IsNullOrEmpty(UnityShellSettings.UsingString))
+			{
+				Evaluator.Run(UnityShellSettings.UsingStringDefault);
+			}
+			else
+			{
+				try
+				{
+					Evaluator.Run(UnityShellSettings.UsingString);
+				}
+				catch
+				{
+					Evaluator.Run(UnityShellSettings.UsingStringDefault);
+				}
+			}
 #endif
 		}
 

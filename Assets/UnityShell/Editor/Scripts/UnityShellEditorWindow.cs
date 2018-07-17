@@ -7,56 +7,12 @@ namespace UnityShell
 {
 	public class UnityShellEditorWindow : EditorWindow
 	{
-		private static class Styles
-		{
-			public static readonly GUIStyle textAreaStyle;
-
-			// Default background Color(0.76f, 0.76f, 0.76f)
-			private static readonly Color bgColorLightSkin = new Color(0.87f, 0.87f, 0.87f);
-			// Default background Color(0.22f, 0.22f, 0.22f)
-			private static readonly Color bgColorDarkSkin = new Color(0.2f, 0.2f, 0.2f);
-			// Default text Color(0.0f, 0.0f, 0.0f)
-			private static readonly Color textColorLightSkin = new Color(0.0f, 0.0f, 0.0f);
-			// Default text Color(0.706f, 0.706f, 0.706f)
-			private static readonly Color textColorDarkSkin = new Color(0.706f, 0.706f, 0.706f);
-			
-			private static Texture2D _backgroundTexture;
-			public static Texture2D backgroundTexture
-			{
-				get
-				{
-					if (_backgroundTexture == null)
-					{
-						_backgroundTexture = new Texture2D(1, 1, TextureFormat.RGBA32, false, true);
-						_backgroundTexture.SetPixel(0, 0, EditorGUIUtility.isProSkin ? bgColorDarkSkin : bgColorLightSkin);
-						_backgroundTexture.Apply();
-					}
-					return _backgroundTexture;
-				}
-			}
-
-			static Styles()
-			{
-				textAreaStyle = new GUIStyle(EditorStyles.textArea);
-				textAreaStyle.padding = new RectOffset();
-
-				var style = textAreaStyle.focused;
-				style.background = backgroundTexture;
-				style.textColor = EditorGUIUtility.isProSkin ? textColorDarkSkin : textColorLightSkin;
-
-				textAreaStyle.focused = style;
-				textAreaStyle.active = style;
-				textAreaStyle.onActive = style;
-				textAreaStyle.hover = style;
-				textAreaStyle.normal = style;
-				textAreaStyle.onNormal = style;
-			}
-		}
-
+		
 		[MenuItem("Window/UnityShell #%u")]
 		private static void CreateWindow()
 		{
-			GetWindow<UnityShellEditorWindow>("UnityShell");
+			var win = GetWindow<UnityShellEditorWindow>("UnityShell");
+			UnityShellSettings.Load();
 		}
 
 		private const string ConsoleTextAreaControlName = "ConsoleTextArea";
@@ -291,9 +247,14 @@ namespace UnityShell
 
 		private void DrawAll()
 		{
-			GUI.DrawTexture(new Rect(0, 0, maxSize.x, maxSize.y), Styles.backgroundTexture, ScaleMode.StretchToFill);
+			GUI.DrawTexture(new Rect(0, 0, maxSize.x, maxSize.y), UnityShellWindowStyles.backgroundTexture, ScaleMode.StretchToFill);
 			EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 			{
+				if (GUILayout.Button("Settings", EditorStyles.toolbarButton))
+				{
+					UnityShellSettingsWindow.OpenWindow();
+				}
+
 				GUILayout.FlexibleSpace();
 
 				if (GUILayout.Button("Clear", EditorStyles.toolbarButton))
@@ -303,51 +264,56 @@ namespace UnityShell
 			}
 			EditorGUILayout.EndHorizontal();
 
+			DrawConsole();
+			DrawConsoleAutocomplete();
+
+		}
+
+		private void DrawConsole()
+		{
 			scrollPos = EditorGUILayout.BeginScrollView(scrollPos);
 			{
-				DrawConsole();
+				var current = Event.current;
+
+				if (current.type == EventType.KeyDown)
+				{
+					ScrollDown();
+
+					if (current.keyCode == KeyCode.Return && !current.shift)
+					{
+						textEditor.MoveTextEnd();
+						try
+						{
+							var result = shellEvaluator.Evaluate(input);
+							Append(result);
+							inputHistory.Add(input);
+							positionInHistory = inputHistory.Count;
+						}
+						catch (Exception e)
+						{
+							Debug.LogException(e);
+							Append(e.Message);
+						}
+
+						AppendStartCommand();
+
+						current.Use();
+					}
+				}
+
+				GUI.SetNextControlName(ConsoleTextAreaControlName);
+				GUILayout.TextArea(text, UnityShellWindowStyles.textAreaStyle, GUILayout.ExpandHeight(true), GUILayout.ExpandWidth(true));
 			}
 			EditorGUILayout.EndScrollView();
+		}
 
+		private void DrawConsoleAutocomplete()
+		{
 			autocompleteBox.results = shellEvaluator.completions;
 			var pos = textEditor.graphicalCursorPos;
 			var rect = new Rect(pos.x, pos.y, 300, 200);
 			rect.y += 34;
 			autocompleteBox.OnGUI(lastWord, rect);
-		}
-
-		private void DrawConsole()
-		{
-			var current = Event.current;
-
-			if (current.type == EventType.KeyDown)
-			{
-				ScrollDown();
-
-				if (current.keyCode == KeyCode.Return && !current.shift)
-				{
-					textEditor.MoveTextEnd();
-					try
-					{
-						var result = shellEvaluator.Evaluate(input);
-						Append(result);
-						inputHistory.Add(input);
-						positionInHistory = inputHistory.Count;
-					}
-					catch (Exception e)
-					{
-						Debug.LogException(e);
-						Append(e.Message);
-					}
-
-					AppendStartCommand();
-
-					current.Use();
-				}
-			}
-
-			GUI.SetNextControlName(ConsoleTextAreaControlName);
-			GUILayout.TextArea(text, Styles.textAreaStyle, GUILayout.ExpandHeight(true), GUILayout.ExpandWidth(true));
 		}
 
 		private void ScrollDown()
