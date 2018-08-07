@@ -34,19 +34,19 @@ namespace UnityShell
 				catch { }
 			});
 
-			if (!String.IsNullOrEmpty(UnityShellSettings.UsingString))
+			if (!String.IsNullOrEmpty(UnityShellSettings.Instance.UsingStringValue))
 			{
-				evaluator.Run(UnityShellSettings.UsingStringDefault);
+				evaluator.Run(UnityShellSettings.UsingStringDefaultValue);
 			}
 			else
 			{
 				try
 				{
-					evaluator.Run(UnityShellSettings.UsingString);
+					evaluator.Run(UnityShellSettings.Instance.UsingStringValue);
 				}
 				catch
 				{
-					evaluator.Run(UnityShellSettings.UsingStringDefault);
+					evaluator.Run(UnityShellSettings.UsingStringDefaultValue);
 				}
 			}
 #else
@@ -57,20 +57,20 @@ namespace UnityShell
 				}
 				catch { }
 			});
-
-			if (!String.IsNullOrEmpty(UnityShellSettings.UsingString))
+			
+			if (!String.IsNullOrEmpty(UnityShellSettings.Instance.UsingStringValue))
 			{
-				Evaluator.Run(UnityShellSettings.UsingStringDefault);
+				Evaluator.Run(UnityShellSettings.UsingStringDefaultValue);
 			}
 			else
 			{
 				try
 				{
-					Evaluator.Run(UnityShellSettings.UsingString);
+					Evaluator.Run(UnityShellSettings.Instance.UsingStringValue);
 				}
 				catch
 				{
-					Evaluator.Run(UnityShellSettings.UsingStringDefault);
+					Evaluator.Run(UnityShellSettings.UsingStringDefaultValue);
 				}
 			}
 #endif

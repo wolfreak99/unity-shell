@@ -5,25 +5,46 @@ using UnityEngine;
 
 namespace UnityShell
 {
-	public static class UnityShellSettings
+	[System.Serializable]
+	public class UnityShellSettings : ScriptableObject
 	{
-		public static string UsingString;
-		private const string UsingStringKeyname = "UnityShellSettings.UsingString";
-		public const string UsingStringDefault = "using UnityEngine; using UnityEditor; using System; using System.Collections.Generic;";
-		
-		public static void Save()
+		[SerializeField]
+		static public UnityShellSettings Instance;
+
+		[Tooltip("These are passed into the compiler before running"),
+		 Header("UsingString"), 
+		 SerializeField]
+		public string UsingStringValue;
+		public const string UsingStringDefaultValue = "using UnityEngine; using UnityEditor; using System; using System.Collections.Generic;";
+		public string UsingStringKeyname = "UnityShellSettings.UsingString";
+
+		internal void LoadValues()
 		{
-			EditorPrefs.SetString(UsingStringKeyname, UsingString);
+
 		}
 
-		public static void Load()
+		internal void ResetToDefaultValues()
 		{
-			UsingString = EditorPrefs.GetString(UsingStringKeyname, UsingStringDefault);
+			UsingStringValue = UsingStringDefaultValue;
 		}
 
-		public static void Reset()
+		internal void SaveValues()
 		{
-			UsingString = UsingStringDefault;
+
+		}
+
+		// This should be the only code to create an instance if it doesn't exist.
+		// Isolating it to here will help with loading and saving
+		static public UnityShellSettings GetOrCreateSingleton()
+		{
+			if (UnityShellSettings.Instance == null)
+			{
+				UnityShellSettings.Instance = ScriptableObject.CreateInstance<UnityShellSettings>();
+				// This may not be needed. I don't know.
+				EditorUtility.SetDirty(UnityShellSettings.Instance);
+			}
+
+			return UnityShellSettings.Instance;
 		}
 	}
 }

@@ -12,7 +12,9 @@ namespace UnityShell
 		private static void CreateWindow()
 		{
 			var win = GetWindow<UnityShellEditorWindow>("UnityShell");
-			UnityShellSettings.Load();
+
+			// Ensure instance of settings container exists.
+			UnityShellSettings.GetOrCreateSingleton();
 		}
 
 		private const string ConsoleTextAreaControlName = "ConsoleTextArea";
@@ -234,7 +236,6 @@ namespace UnityShell
 				if (current.keyCode == KeyCode.Backspace)
 				{
 					cursorIndex--;
-
 				}
 
 				if (cursorIndex < lastIndexCommand)
